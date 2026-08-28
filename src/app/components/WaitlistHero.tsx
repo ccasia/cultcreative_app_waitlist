@@ -136,7 +136,7 @@ export default function WaitlistHero() {
 
 	const buttonText = () => {
 		if (status === "loading") return "Registering...";
-		if (status === "done") return "Registering";
+		if (status === "done") return "Registered";
 		if (isDesktop) return "Register for Waitlist";
 		if (isTouch) return "Register";
 		return "Register";

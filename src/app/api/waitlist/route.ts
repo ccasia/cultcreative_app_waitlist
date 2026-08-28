@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import nodemailer from "nodemailer";
-import { waitlistWelcomeEmail } from "@/lib/waitlistEmail";
+import { join } from "node:path";
+import { EMAIL_IMAGES, waitlistWelcomeEmail } from "@/lib/waitlistEmail";
 
 const sheets = google.sheets("v4");
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -60,15 +61,17 @@ export async function POST(request: NextRequest) {
 				},
 			});
 
-			const siteUrl =
-				process.env.NEXT_PUBLIC_SITE_URL ||
-				"https://waitlist.cultcreativeasia.com";
-
 			await transport.sendMail({
 				from: `"Cult Creative" <${process.env.SMTP_EMAIL}>`,
 				to: cleanEmail,
 				subject: "Thanks for joining the waitlist!",
-				html: waitlistWelcomeEmail(siteUrl),
+				html: waitlistWelcomeEmail(),
+				attachments: EMAIL_IMAGES.map((img) => ({
+					cid: img.cid,
+					filename: img.path.split("/").pop(),
+					path: join(process.cwd(), img.path),
+					contentDisposition: "inline" as const,
+				})),
 			});
 		} catch (mailError) {
 			console.error("Waitlist confirmation email failed:", mailError);
