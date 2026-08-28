@@ -43,7 +43,7 @@ export default function PhoneMockup({ interactive }: { interactive: boolean }) {
 				</AnimatePresence>
 
 				<div
-					className="absolute bottom-[2%] left-[3.5%] right-[3.5%] flex items-center justify-between rounded-[24px] p-2"
+					className="absolute bottom-[2%] left-[3.5%] right-[3.5%] flex items-center justify-between rounded-[18px] lg:rounded-[24px] p-1.5 lg:p-2"
 					style={{
 						background:
 							"linear-gradient(180deg, rgba(58,58,60,0.6) 0%, #3A3A3C 50%, #3A3A3C 100%)",
@@ -59,21 +59,21 @@ export default function PhoneMockup({ interactive }: { interactive: boolean }) {
 								disabled={!interactive}
 								aria-label={tab.label}
 								aria-current={isActive ? "page" : undefined}
-								className={`flex flex-1 flex-col items-center justify-center gap-[2px] rounded-[16px] py-1.5 transition-colors ${
+								className={`flex flex-1 flex-col items-center justify-center gap-[2px] rounded-[12px] lg:rounded-[16px] py-1 lg:py-1.5 transition-colors ${
 									isActive ? "bg-[#8A5AFE]/50" : ""
 								} ${interactive ? "cursor-pointer" : "cursor-default"}`}
 							>
 								<img
 									src={tab.icon}
 									alt=""
-									className="h-[16px] w-[16px]"
+									className=" h-[14px] w-[14px] lg:h-[16px] lg:w-[16px]"
 									style={{
 										filter: "brightness(0) invert(1)",
 										opacity: isActive ? 1 : 0.55,
 									}}
 								/>
 								<span
-									className={`text-[8px] font-medium leading-none ${
+									className={`text-[6px] lg:text-[8px] font-medium leading-none ${
 										isActive ? "text-white" : "text-white/55"
 									}`}
 								>
@@ -89,13 +89,13 @@ export default function PhoneMockup({ interactive }: { interactive: boolean }) {
 						alt=""
 						width={200}
 						height={200}
-						className="ml-1 h-[42px] w-[42px] shrink-0 rounded-full"
+						className="ml-1 h-[32px] w-[32px] lg:h-[42px] lg:w-[42px] shrink-0 rounded-full"
 					/>
 				</div>
 			</div>
 			{/* Bare iPhone frame — transparent screen area, drawn over the screen */}
 			<Image
-				src="/images/app/iphone-frame-v3.png"
+				src="/images/app/iphone-frame.png"
 				alt="Cult Creative app"
 				fill
 				sizes="340px"
