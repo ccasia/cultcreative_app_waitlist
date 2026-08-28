@@ -1,0 +1,44 @@
+steps:
+    - name: "gcr.io/cloud-builders/docker"
+      args:
+        - "build"
+        - "-t"
+        - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
+        - "--build-arg"
+        - "NEXT_PUBLIC_SITE_URL=https://waitlist.cultcreativeasia.com"
+        - "."
+
+    - name: "gcr.io/cloud-builders/docker"
+      args:
+        - "push"
+        - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
+
+    - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
+      entrypoint: gcloud
+      args:
+        - "run"
+        - "deploy"
+        - "cultcreative-app-waitlist"
+        - "--image"
+        - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
+        - "--region"
+        - "asia-southeast1"
+        - "--set-secrets"
+        - "GOOGLE_PRIVATE_KEY=GOOGLE_PRIVATE_KEY:latest"
+        - "--set-secrets"
+        - "GOOGLE_CLIENT_EMAIL=GOOGLE_CLIENT_EMAIL:latest"
+        - "--set-secrets"
+        - "SMTP_EMAIL=SMTP_EMAIL:latest"
+        - "--set-secrets"
+        - "SMTP_PASSWORD=SMTP_PASSWORD:latest"
+        - "--set-env-vars"
+        - "WAITLIST_SHEET_ID=<your-new-sheet-id>"
+        - "--allow-unauthenticated"
+
+  serviceAccount: "projects/cult-creative-421007/serviceAccounts/cloud-run-landing@cult-creative-421007.iam.gserviceaccount.com"
+
+  images:
+    - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
+
+  options:
+    defaultLogsBucketBehavior: "REGIONAL_USER_OWNED_BUCKET"

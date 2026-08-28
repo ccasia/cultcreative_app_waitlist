@@ -1,0 +1,50 @@
+@import url("https://fonts.cdnfonts.com/css/times-new-roman");
+@import "tailwindcss";
+
+:root {
+	--background: #231f20;
+	--foreground: #ffffff;
+}
+
+body {
+	background: var(--background);
+	color: var(--foreground);
+	font-family: "Aileron", -apple-system, BlinkMacSystemFont, "Segoe UI",
+		"Roboto", "Helvetica Neue", sans-serif;
+	overflow-x: hidden;
+}
+
+.font-serif-display {
+	font-family: "Times New Roman", serif;
+}
+
+.hero-glow {
+	position: fixed;
+	top: 64%;
+	left: 50%;
+	width: min(1000px, 70vw);
+	height: min(1000px, 70vw);
+	transform: translate(-50%, -50%);
+	border-radius: 50%;
+	background: radial-gradient(
+		circle at center,
+		rgba(138, 90, 254, 0.8) 0%,
+		rgba(138, 90, 254, 0.62) 28%,
+		rgba(138, 90, 254, 0.3) 52%,
+		rgba(138, 90, 254, 0.1) 72%,
+		rgba(138, 90, 254, 0) 88%
+	);
+	filter: blur(140px);
+	will-change: filter;
+}
+
+/* Dithering overlay — breaks up 8-bit banding in the gradient falloff. */
+.hero-glow::after {
+	content: "";
+	position: absolute;
+	inset: -50%;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+	mix-blend-mode: overlay;
+	opacity: 0.035;
+	pointer-events: none;
+}
