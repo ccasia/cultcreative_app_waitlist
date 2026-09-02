@@ -38,6 +38,7 @@ export default function PhoneMockup({ interactive }: { interactive: boolean }) {
 							sizes="340px"
 							className="object-contain"
 							priority={activeTab === "campaigns"}
+							loading={activeTab === "campaigns" ? undefined : "lazy"}
 						/>
 					</motion.div>
 				</AnimatePresence>
