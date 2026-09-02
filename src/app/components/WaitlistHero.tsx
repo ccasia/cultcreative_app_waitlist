@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import toast, { Toaster } from "react-hot-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, useTransform } from "framer-motion";
 import { usePointerState } from "../hooks/usePointerState";
 import PhoneMockup from "./phone/PhoneMockup";
+import LoadingDots from "./LoadingDots";
 
 const BRANDS = [
 	{ src: "/images/brands/grab.png", alt: "Grab" },
@@ -30,67 +31,32 @@ const FORM_SPRING = {
 	mass: 0.9,
 };
 
-const CENTERED = { left: "50%", x: "-50%", y: "-50%" } as const;
-
-const PHONE_POSITIONS = {
-	hiddenDesktop: {
-		...CENTERED,
-		opacity: 0,
-		top: "50%",
-		rotate: 0,
-		scale: 0.85,
+/**
+ * Endpoints the phone interpolates between as progress runs 0 -> 1.
+ * Desktop pivots around the viewport centre; mobile stays centred
+ * horizontally and slides down the page.
+ */
+const PHONE_TRACK = {
+	desktop: {
+		top: ["50%", "50%"],
+		left: ["50%", "78%"],
+		y: ["-50%", "-50%"],
+		rotate: [15.38, 0],
+		scale: [1, 0.85],
 	},
-	hiddenMobile: {
-		...CENTERED,
-		opacity: 0,
-		top: "22vh",
-		bottom: "auto",
-		rotate: 0,
-		scale: 0.8,
+	mobile: {
+		top: ["22vh", "calc(26vh)"],
+		left: ["50%", "50%"],
+		y: ["0%", "0%"],
+		rotate: [15.38, 0],
+		scale: [0.8, 0.75],
 	},
-	brandingDesktop: {
-		...CENTERED,
-		opacity: 1,
-		top: "50%",
-		rotate: 15.38,
-		scale: 1,
-	},
-	brandingMobile: {
-		left: "50%",
-		x: "-50%",
-		y: "0%",
-		opacity: 1,
-		top: "22vh",
-		bottom: "auto",
-		rotate: 15.38,
-		scale: 0.8,
-	},
-	formDesktop: {
-		opacity: 1,
-		top: "50%",
-		left: "78%",
-		x: "-50%",
-		y: "-50%",
-		rotate: 0,
-		scale: 0.85,
-	},
-	formMobile: {
-		left: "50%",
-		x: "-50%",
-		y: "0%",
-		opacity: 1,
-		top: "calc(26vh)",
-		bottom: "auto",
-		rotate: 0,
-		scale: 0.75,
-	},
-} as const;
+};
 
 export default function WaitlistHero() {
-	const { isFormState, isTouch, isDesktop } = usePointerState();
+	const { progress, isFormState, isTouch, isDesktop } = usePointerState();
 	const [email, setEmail] = useState("");
 	const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
-	const [settled, setSettled] = useState(false);
 	const [entered, setEntered] = useState(false);
 
 	useEffect(() => {
@@ -98,14 +64,18 @@ export default function WaitlistHero() {
 		return () => clearTimeout(t);
 	}, []);
 
-	let phonePose: keyof typeof PHONE_POSITIONS = isDesktop
-		? "hiddenDesktop"
-		: "hiddenMobile";
-	if (entered && isFormState) {
-		phonePose = isDesktop ? "formDesktop" : "formMobile";
-	} else if (entered) {
-		phonePose = isDesktop ? "brandingDesktop" : "brandingMobile";
-	}
+	const track = isDesktop ? PHONE_TRACK.desktop : PHONE_TRACK.mobile;
+	const phoneTop = useTransform(progress, [0, 1], track.top);
+	const phoneLeft = useTransform(progress, [0, 1], track.left);
+	const phoneY = useTransform(progress, [0, 1], track.y);
+	const phoneRotate = useTransform(progress, [0, 1], track.rotate);
+	const phoneScale = useTransform(progress, [0, 1], track.scale);
+
+	// Branding fades out over the first half, the form fades in over the
+	// second, so the two never overlap at full opacity.
+	const brandingOpacity = useTransform(progress, [0, 0.45], [1, 0]);
+	const formOpacity = useTransform(progress, [0.5, 1], [0, 1]);
+	const formShift = useTransform(progress, [0.5, 1], [40, 0]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -128,6 +98,8 @@ export default function WaitlistHero() {
 
 			toast.success("Email Registered!");
 			setStatus("done");
+			setEmail("");
+			setTimeout(() => setStatus("idle"), 2000);
 		} catch {
 			toast.error("Network error. Try again.");
 			setStatus("idle");
@@ -135,10 +107,16 @@ export default function WaitlistHero() {
 	};
 
 	const buttonText = () => {
-		if (status === "loading") return "Registering...";
+		if (status === "loading") {
+			return (
+				<span className="inline-flex items-center gap-1.5">
+					Registering
+					<LoadingDots />
+				</span>
+			);
+		}
 		if (status === "done") return "Registered";
 		if (isDesktop) return "Register for Waitlist";
-		if (isTouch) return "Register";
 		return "Register";
 	};
 
@@ -162,59 +140,46 @@ export default function WaitlistHero() {
 			</header>
 
 			{/* ---------- STATE 1: branding ---------- */}
-			<AnimatePresence>
-				{!isFormState && (
-					<motion.div
-						className="pointer-events-none fixed inset-0 z-10 flex flex-col items-center justify-center px-6 text-center"
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						transition={{ duration: 0.4 }}
-					>
-						<h1 className="text-[15vw] font-bold leading-none tracking-[-0.06em] lg:text-[200px]">
-							Cult Creative,
-						</h1>
-						<h2 className="font-times text-[15vw] font-normal italic leading-none tracking-[-0.04em] lg:text-[200px]">
-							App waitlist.
-						</h2>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			<motion.div
+				className="pointer-events-none fixed inset-0 z-10 flex flex-col items-center justify-center px-6 text-center"
+				style={{ opacity: brandingOpacity }}
+			>
+				<h1 className="text-[15vw] font-bold leading-none tracking-[-0.06em] lg:text-[200px]">
+					Cult Creative,
+				</h1>
+				<h2 className="font-times text-[15vw] font-normal italic leading-none tracking-[-0.04em] lg:text-[200px]">
+					App waitlist.
+				</h2>
+			</motion.div>
 
 			{/* ---------- THE PHONE ---------- */}
 			<motion.div
 				className="fixed z-20"
-				initial={PHONE_POSITIONS.hiddenMobile}
-				animate={PHONE_POSITIONS[phonePose]}
-				transition={{
-					...SPRING,
-					opacity: { duration: 0.7, ease: "easeOut" },
-					rotate:
-						entered && !isFormState
-							? { duration: 0.9, ease: [0.2, 0.8, 0.2, 1] }
-							: SPRING,
-				}}
-				onAnimationComplete={() => setSettled(isFormState)}
+				initial={{ opacity: 0 }}
+				animate={{ opacity: entered ? 1 : 0 }}
+				transition={{ opacity: { duration: 0.7, ease: "easeOut" } }}
 				style={{
+					top: phoneTop,
+					left: phoneLeft,
+					x: "-50%",
+					y: phoneY,
+					rotate: phoneRotate,
+					scale: phoneScale,
 					width: isDesktop ? "clamp(200px, 24vw, 340px)" : "min(58vw, 260px)",
 				}}
 			>
-				<PhoneMockup interactive={settled && isFormState} />
+				<PhoneMockup interactive={isFormState} />
 			</motion.div>
 
 			{/* ---------- STATE 2: form ---------- */}
-			<AnimatePresence>
-				{isFormState && (
-					<motion.div
-						className="pointer-events-none fixed inset-0 z-30 flex flex-col justify-start px-6 pt-24 lg:px-12 lg:justify-center lg:px-0 lg:pt-0"
-						initial={{ opacity: 0, y: 60 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 40 }}
-						transition={{
-							...FORM_SPRING,
-							opacity: { duration: 0.25 },
-						}}
-					>
+			<motion.div
+				className="pointer-events-none fixed inset-0 z-30 flex flex-col justify-start px-6 pt-24 lg:px-12 lg:justify-center lg:px-0 lg:pt-0"
+				style={{
+					opacity: formOpacity,
+					y: formShift,
+					visibility: isFormState ? "visible" : "hidden",
+				}}
+			>
 						<div className="pointer-events-auto w-full min-h-[26vh] lg:min-h-0 lg:max-w-[46vw] lg:-mt-24 lg:ml-[calc(22vw-144.5px)]">
 							<h1 className="font-serif-display text-5xl leading-[1.05] tracking-[-0.04em] lg:whitespace-nowrap lg:text-[clamp(56px,7.5vw,108px)]">
 								Get paid to <span className="text-[#8a5afe]">create</span>.
@@ -269,9 +234,7 @@ export default function WaitlistHero() {
 								/>
 							))}
 						</div>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			</motion.div>
 
 			{/* Touch devices need scroll height to scroll against */}
 			{isTouch && <div className="h-[180vh]" />}

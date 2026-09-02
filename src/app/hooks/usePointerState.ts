@@ -1,20 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+	useMotionValue,
+	useMotionValueEvent,
+	useSpring,
+	type MotionValue,
+} from "framer-motion";
 
-/**
- * Returns true when the page should show the "form" state.
- *
- * Desktop: mouse below 55% of the viewport height.
- * Touch:   any scroll past 15% of the viewport.
- *
- * Respects prefers-reduced-motion by pinning to the form state,
- * so the email input is always reachable.
- */
-export function usePointerState() {
+const SETTLE_DELAY = 140;
+const WHEEL_RANGE = 600;
+const TOUCH_RANGE = 0.5;
+
+export type PointerState = {
+	progress: MotionValue<number>;
+	isFormState: boolean;
+	isTouch: boolean;
+	isDesktop: boolean;
+};
+
+export function usePointerState(): PointerState {
+	const raw = useMotionValue(0);
+	const progress = useSpring(raw, {
+		stiffness: 260,
+		damping: 34,
+		mass: 0.9,
+	});
+
 	const [isFormState, setIsFormState] = useState(false);
 	const [isTouch, setIsTouch] = useState(false);
-	// Tracks the lg breakpoint so the phone can use a different layout on
 	// mobile (stacked) vs desktop (side by side).
 	const [isDesktop, setIsDesktop] = useState(true);
 
@@ -26,44 +40,78 @@ export function usePointerState() {
 		return () => mq.removeEventListener("change", sync);
 	}, []);
 
+	useMotionValueEvent(progress, "change", (v) => {
+		setIsFormState(v > 0.5);
+	});
+
 	useEffect(() => {
 		const reduced = window.matchMedia(
 			"(prefers-reduced-motion: reduce)",
 		).matches;
 		if (reduced) {
-			setIsFormState(true);
+			raw.set(1);
 			return;
 		}
 
 		const touch = window.matchMedia("(hover: none)").matches;
 		setIsTouch(touch);
 
+		let settleTimer: ReturnType<typeof setTimeout> | undefined;
+		const settle = () => {
+			clearTimeout(settleTimer);
+			settleTimer = setTimeout(() => {
+				raw.set(raw.get() > 0.5 ? 1 : 0);
+			}, SETTLE_DELAY);
+		};
+
 		if (touch) {
 			const onScroll = () => {
-				setIsFormState(window.scrollY > window.innerHeight * 0.15);
+				const span = window.innerHeight * TOUCH_RANGE;
+				const next = Math.min(1, Math.max(0, window.scrollY / span));
+				raw.set(next);
+				settle();
 			};
 			window.addEventListener("scroll", onScroll, { passive: true });
 			onScroll();
-			return () => window.removeEventListener("scroll", onScroll);
+			return () => {
+				window.removeEventListener("scroll", onScroll);
+				clearTimeout(settleTimer);
+			};
 		}
 
-		// Hysteresis: separate enter/exit thresholds stop the state
-		// flickering when the cursor hovers near the boundary.
-		let active = false;
-		const onMove = (e: MouseEvent) => {
-			const y = e.clientY / window.innerHeight;
-			if (!active && y > 0.65) {
-				active = true;
-				setIsFormState(true);
-			} else if (active && y < 0.35) {
-				active = false;
-				setIsFormState(false);
-			}
+		const onWheel = (e: WheelEvent) => {
+			// Ignore horizontal scrolling entirely.
+			if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+			const next = Math.min(
+				1,
+				Math.max(0, raw.get() + e.deltaY / WHEEL_RANGE),
+			);
+			raw.set(next);
+			settle();
 		};
 
-		window.addEventListener("mousemove", onMove, { passive: true });
-		return () => window.removeEventListener("mousemove", onMove);
-	}, []);
+		const onKey = (e: KeyboardEvent) => {
+			const target = e.target as HTMLElement | null;
+			if (target && /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)) return;
 
-	return { isFormState, isTouch, isDesktop };
+			const down = ["ArrowDown", "PageDown", " ", "End"].includes(e.key);
+			const up = ["ArrowUp", "PageUp", "Home"].includes(e.key);
+			if (!down && !up) return;
+
+			e.preventDefault();
+			clearTimeout(settleTimer);
+			raw.set(down ? 1 : 0);
+		};
+
+		window.addEventListener("wheel", onWheel, { passive: true });
+		window.addEventListener("keydown", onKey);
+		return () => {
+			window.removeEventListener("wheel", onWheel);
+			window.removeEventListener("keydown", onKey);
+			clearTimeout(settleTimer);
+		};
+	}, [raw]);
+
+	return { progress, isFormState, isTouch, isDesktop };
 }
