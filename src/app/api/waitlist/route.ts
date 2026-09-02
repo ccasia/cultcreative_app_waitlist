@@ -42,6 +42,8 @@ export async function POST(request: NextRequest) {
 			scopes: ["https://www.googleapis.com/auth/spreadsheets"],
 		});
 
+		console.log("AUTH:", auth);
+
 		await sheets.spreadsheets.values.append({
 			auth,
 			spreadsheetId,
