@@ -26,7 +26,7 @@ steps:
         - "--service-account"
         - "cloud-run-landing@cult-creative-421007.iam.gserviceaccount.com"
         - "--set-secrets"
-        - "GOOGLE_PRIVATE_KEY=GOOGLE_PRIVATE_KEY:latest,GOOGLE_CLIENT_EMAIL=GOOGLE_CLIENT_EMAIL:latest,SMTP_EMAIL=SMTP_EMAIL:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest"
+        - "GOOGLE_PRIVATE_KEY=WAITLIST_GOOGLE_PRIVATE_KEY:latest,GOOGLE_CLIENT_EMAIL=WAITLIST_GOOGLE_CLIENT_EMAIL:latest,SMTP_EMAIL=SMTP_EMAIL:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest"
         - "--set-env-vars"
         - "WAITLIST_SHEET_ID=1vHeuXKNGWH2OnxTuolPpXf0WHcM3woQr0TtgiaxNgNw"
         - "--allow-unauthenticated"
