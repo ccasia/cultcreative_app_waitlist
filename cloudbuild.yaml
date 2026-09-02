@@ -23,6 +23,8 @@ steps:
         - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
         - "--region"
         - "asia-southeast1"
+        - "--service-account"
+        - "cloud-run-landing@cult-creative-421007.iam.gserviceaccount.com"
         - "--set-secrets"
         - "GOOGLE_PRIVATE_KEY=GOOGLE_PRIVATE_KEY:latest,GOOGLE_CLIENT_EMAIL=GOOGLE_CLIENT_EMAIL:latest,SMTP_EMAIL=SMTP_EMAIL:latest,SMTP_PASSWORD=SMTP_PASSWORD:latest"
         - "--set-env-vars"
