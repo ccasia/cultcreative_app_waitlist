@@ -33,3 +33,6 @@ serviceAccount: "projects/cult-creative-421007/serviceAccounts/cloud-run-landing
 
 images:
     - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
+
+options:
+    defaultLogsBucketBehavior: "REGIONAL_USER_OWNED_BUCKET"
