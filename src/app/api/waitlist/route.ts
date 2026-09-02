@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		const cleanEmail = email.trim().toLowerCase();
-		const spreadsheetId = process.env.WAITLIST_SHEET_ID;
+		const spreadsheetId = "1vHeuXKNGWH2OnxTuolPpXf0WHcM3woQr0TtgiaxNgNw";
 
 		if (!spreadsheetId) {
 			console.error("WAITLIST_SHEET_ID not configured");
