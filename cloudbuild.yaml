@@ -29,10 +29,10 @@ steps:
         - "WAITLIST_SHEET_ID=1vHeuXKNGWH2OnxTuolPpXf0WHcM3woQr0TtgiaxNgNw"
         - "--allow-unauthenticated"
 
-  serviceAccount: "projects/cult-creative-421007/serviceAccounts/cloud-run-landing@cult-creative-421007.iam.gserviceaccount.com"
+serviceAccount: "projects/cult-creative-421007/serviceAccounts/cloud-run-landing@cult-creative-421007.iam.gserviceaccount.com"
 
-  images:
+images:
     - "gcr.io/cult-creative-421007/cultcreative_app_waitlist:latest"
 
-  options:
+options:
     defaultLogsBucketBehavior: "REGIONAL_USER_OWNED_BUCKET"
